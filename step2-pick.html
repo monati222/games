@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>الخطوة 2 — مواجهة صورتين حتى يبقى فائز واحد</title>
+<title>الخطوة 2 — مواجهة صورتين بالتسلسل</title>
 <style>
   html,body{height:100%;margin:0;background:#0b1224;color:#e5e7eb;font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial}
   .wrap{max-width:1100px;margin:0 auto;padding:16px}
@@ -17,8 +17,8 @@
     transition:border-color .2s ease, box-shadow .2s ease, transform .08s ease
   }
   .choice:hover{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18) inset;transform:translateY(-2px)}
-  .img{width:120px;height:120px;object-fit:contain;display:block;margin:6px auto;border-radius:12px;background:#0b1324;border:1px solid #2b3453;padding:10px}
-  .fallback{width:120px;height:120px;display:grid;place-items:center;margin:6px auto;border-radius:12px;background:#0b1324;border:1px solid #2b3453;padding:10px;font-size:42px}
+  .img{width:140px;height:140px;object-fit:contain;display:block;margin:6px auto;border-radius:12px;background:#0b1324;border:1px solid #2b3453;padding:10px}
+  .fallback{width:140px;height:140px;display:grid;place-items:center;margin:6px auto;border-radius:12px;background:#0b1324;border:1px solid #2b3453;padding:10px;font-size:46px}
   .title{text-align:center;font-weight:800;margin-top:6px}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
   .btn{border:1px solid #2b3453;background:#0f1b34;color:#e5e7eb;border-radius:12px;padding:10px 14px;cursor:pointer;text-decoration:none;display:inline-block}
@@ -32,7 +32,7 @@
   <div class="wrap">
     <div class="card">
       <h1>🖼️ الخطوة 2 — اختاري واحدة في كل جولة</h1>
-      <div class="muted">ابدئي بـ TikTok ضد سناب شات، والفائزة تواجه التالية بالتسلسل حتى تبقى فائزة نهائية ✅</div>
+      <div class="muted">الترتيب: TikTok ضد سناب → الفائزة ضد Instagram → ضد X → ضد إحسان → ضد ChatGPT.</div>
 
       <div class="progress"><div id="bar" class="bar"></div></div>
       <div id="roundLabel" class="muted">الجولة 1</div>
@@ -47,167 +47,17 @@
   </div>
 
 <script>
-/* ============ البيانات مع روابط بديلة للصور (fallback) ============ */
-/* كل عنصر عنده مصفوفة srcs: سيجرّب الأولى، وإن فشلت ينتقل للثانية... وهكذا */
+/* ============ مصادر صور موثوقة + بدائل ============ */
+/* نبدأ بـ Clearbit (logo.clearbit.com) ثم بدائل من ويكيميديا، ثم Emoji */
 const ITEMS = [
-  {
-    id:"tiktok", name:"TikTok",
+  { id:"tiktok",   name:"TikTok",
     srcs:[
-      "https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg",
-      "https://upload.wikimedia.org/wikipedia/en/thumb/a/a9/TikTok_logo.svg/512px-TikTok_logo.svg.png"
-    ],
-    emoji:"🎵"
+      "https://logo.clearbit.com/tiktok.com",
+      "https://upload.wikimedia.org/wikipedia/commons/3/3a/TikTok_Icon_Black.svg",
+      "https://upload.wikimedia.org/wikipedia/commons/a/a9/TikTok_logo.svg"
+    ], emoji:"🎵"
   },
-  {
-    id:"snapchat", name:"سناب شات",
+  { id:"snapchat", name:"سناب شات",
     srcs:[
-      "https://upload.wikimedia.org/wikipedia/en/a/ad/Snapchat_logo.svg",
-      "https://upload.wikimedia.org/wikipedia/en/thumb/a/ad/Snapchat_logo.svg/512px-Snapchat_logo.svg.png"
-    ],
-    emoji:"⚡"
-  },
-  {
-    id:"instagram", name:"Instagram",
-    srcs:[
-      "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
-    ],
-    emoji:"📸"
-  },
-  {
-    id:"twitterx", name:"Twitter (X)",
-    srcs:[
-      "https://upload.wikimedia.org/wikipedia/commons/9/95/Twitter_new_X_logo.png",
-      "https://upload.wikimedia.org/wikipedia/commons/5/53/X_logo_2023_original.svg",
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/X_logo_2023_original.svg/512px-X_logo_2023_original.svg.png"
-    ],
-    emoji:"🐦"
-  },
-  {
-    id:"ihsan", name:"إحسان",
-    srcs:[
-      "https://ehsan.sa/assets/images/logo.svg",
-      /* لو تعطل الموقع، استخدم بديل عام (قلب) كحل مؤقت: */
-      "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><rect width='100%' height='100%' fill='%230b1324'/><text x='50%' y='55%' font-size='110' text-anchor='middle'>%E2%9D%A4%EF%B8%8F</text></svg>"
-    ],
-    emoji:"💞"
-  },
-  {
-    id:"chatgpt", name:"ChatGPT",
-    srcs:[
-      "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg",
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/512px-ChatGPT_logo.svg.png"
-    ],
-    emoji:"🤖"
-  }
-];
-
-/* التسلسل المطلوب للجولات: أول اثنين يتواجهون، ثم الفائزة تواجه التالي... */
-const ORDER = ["tiktok","snapchat","instagram","twitterx","ihsan","chatgpt"];
-const KEY = "GAMES_HUB_PICK";
-
-let champion = null; // الفائزة الحالية
-let nextIndex = 0;   // مؤشر داخل ORDER
-
-function $(id){ return document.getElementById(id); }
-function getItemById(id){ return ITEMS.find(x=>x.id===id); }
-
-function createImgWithFallback(sources, alt, placeholderEmoji){
-  const wrap = document.createElement("div");
-  let idx = 0;
-  const img = document.createElement("img");
-  img.className = "img";
-  img.alt = alt;
-
-  const fallback = document.createElement("div");
-  fallback.className = "fallback";
-  fallback.textContent = placeholderEmoji || "🖼️";
-  fallback.style.display = "none";
-
-  function tryNext(){
-    if (idx < sources.length){
-      img.src = sources[idx++];
-    } else {
-      // نفدت الروابط → أظهر بديل
-      img.style.display = "none";
-      fallback.style.display = "grid";
-    }
-  }
-  img.addEventListener("error", tryNext);
-  tryNext();
-
-  wrap.appendChild(img);
-  wrap.appendChild(fallback);
-  return wrap;
-}
-
-function renderPair(){
-  const pairEl = $("pair");
-  const bar = $("bar");
-  const roundLabel = $("roundLabel");
-
-  // البداية: خذ أول اثنين من ORDER
-  if (champion === null && nextIndex === 0){
-    champion = getItemById(ORDER[0]);
-    nextIndex = 1; // المنافس التالي هو ORDER[1]
-  }
-
-  // إنتهينا؟ (آخر واحد تمّت مواجهته)
-  if (nextIndex >= ORDER.length){
-    // حفظ النتيجة النهائية وتمكين التالي
-    try { localStorage.setItem(KEY, champion.id); } catch(e){}
-    pairEl.innerHTML = `<div class="muted">🎉 الفائزة النهائية: ${champion.name} — جاهزة للانتقال للعبة 2</div>`;
-    bar.style.width = "100%";
-    $("nextBtn").disabled = false;
-    roundLabel.textContent = "النهاية";
-    return;
-  }
-
-  const challenger = getItemById(ORDER[nextIndex]);
-
-  pairEl.innerHTML = "";
-
-  [champion, challenger].forEach((item, idx)=>{
-    const card = document.createElement("div");
-    card.className = "choice";
-    const imgWrap = createImgWithFallback(item.srcs, item.name, item.emoji);
-
-    const title = document.createElement("div");
-    title.className = "title";
-    title.textContent = item.name;
-
-    card.appendChild(imgWrap);
-    card.appendChild(title);
-
-    card.addEventListener("click", ()=>{
-      // اختيار الفائزة
-      champion = item;
-      nextIndex += 1;
-
-      // تقدّم الشريط
-      const totalDuels = ORDER.length - 1;        // عدد المواجهات
-      const done = Math.min(nextIndex, totalDuels);
-      bar.style.width = Math.floor(done/totalDuels*100) + "%";
-      $("roundLabel").textContent = (nextIndex>=ORDER.length) ? "النهاية" : ("الجولة " + (done+1));
-
-      renderPair();
-    });
-
-    pairEl.appendChild(card);
-  });
-
-  // حدّث شريط التقدم ووسم الجولة
-  const totalDuels = ORDER.length - 1;
-  const done = Math.min(nextIndex, totalDuels);
-  bar.style.width = Math.floor(done/totalDuels*100) + "%";
-  $("roundLabel").textContent = "الجولة " + (done+1);
-}
-
-$("nextBtn").addEventListener("click", ()=>{
-  // إلى اللعبة الثانية
-  window.location.href = "./step3-game.html";
-});
-
-renderPair();
-</script>
-</body>
-</html>
+      "https://logo.clearbit.com/snapchat.com",
+      "https://upload.wikimedia.

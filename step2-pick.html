@@ -3,36 +3,41 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>الخطوة 2 — اختاري صورة</title>
+<title>الخطوة 2 — مواجهة صورتين حتى يبقى فائز واحد</title>
 <style>
   html,body{height:100%;margin:0;background:#0b1224;color:#e5e7eb;font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial}
   .wrap{max-width:1100px;margin:0 auto;padding:16px}
   h1{font-size:20px;margin:0 0 12px}
   .card{background:#0e142a;border:1px solid #2b3453;border-radius:16px;padding:14px}
-  .muted{color:#9aa4bf;font-size:14px;margin-bottom:8px}
-  .grid{display:grid;gap:12px}
-  @media(min-width:820px){ .grid{grid-template-columns:1fr 1fr 1fr} }
+  .muted{color:#9aa4bf;font-size:14px;margin-bottom:10px}
+  .pair{display:grid;gap:12px;margin-top:10px}
+  @media(min-width:820px){ .pair{grid-template-columns:1fr 1fr} }
   .choice{
-    border:2px solid #2b3453;background:#101736;border-radius:14px;padding:12px;cursor:pointer;
+    border:2px solid #2b3453;background:#101736;border-radius:14px;padding:14px;cursor:pointer;
     transition:border-color .2s ease, box-shadow .2s ease, transform .08s ease
   }
   .choice:hover{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18) inset;transform:translateY(-2px)}
-  .choice.selected{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.28) inset}
-  .img{width:120px;height:120px;object-fit:contain;display:block;margin:auto}
-  .title{text-align:center;font-weight:700;margin-top:8px}
+  .img{width:120px;height:120px;object-fit:contain;display:block;margin:6px auto;border-radius:12px;background:#0b1324;border:1px solid #2b3453;padding:10px}
+  .fallback{width:120px;height:120px;display:grid;place-items:center;margin:6px auto;border-radius:12px;background:#0b1324;border:1px solid #2b3453;padding:10px;font-size:42px}
+  .title{text-align:center;font-weight:800;margin-top:6px}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
   .btn{border:1px solid #2b3453;background:#0f1b34;color:#e5e7eb;border-radius:12px;padding:10px 14px;cursor:pointer;text-decoration:none;display:inline-block}
   .btn.primary{background:#22c55e;color:#052e16;border-color:transparent}
   .btn:disabled{opacity:.6;cursor:not-allowed}
+  .progress{height:10px;background:#1a2444;border-radius:999px;overflow:hidden;margin:10px 0 6px}
+  .bar{height:100%;width:0;background:#22c55e}
 </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>🖼️ الخطوة 2 — اختاري صورة واحدة</h1>
-      <div class="muted">الصورة المختارة ستظهر في الصفحة التالية (اللعبة 2) في لوحة جانبية.</div>
+      <h1>🖼️ الخطوة 2 — اختاري واحدة في كل جولة</h1>
+      <div class="muted">ابدئي بـ TikTok ضد سناب شات، والفائزة تواجه التالية بالتسلسل حتى تبقى فائزة نهائية ✅</div>
 
-      <div id="choices" class="grid" aria-live="polite"></div>
+      <div class="progress"><div id="bar" class="bar"></div></div>
+      <div id="roundLabel" class="muted">الجولة 1</div>
+
+      <div id="pair" class="pair" aria-live="polite"></div>
 
       <div class="row">
         <a class="btn" href="./step1-game.html">← السابق</a>
@@ -42,59 +47,167 @@
   </div>
 
 <script>
-/* --- بيانات الخيارات (بصور حقيقية) --- */
-const OPTIONS = [
-  { id:"tiktok",    name:"TikTok",      img:"https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg" },
-  { id:"snapchat",  name:"سناب شات",   img:"https://upload.wikimedia.org/wikipedia/en/a/ad/Snapchat_logo.svg" },
-  { id:"instagram", name:"Instagram",   img:"https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" },
-  { id:"twitterx",  name:"Twitter (X)", img:"https://upload.wikimedia.org/wikipedia/commons/9/95/Twitter_new_X_logo.png" },
-  { id:"ihsan",     name:"إحسان",       img:"https://ehsan.sa/assets/images/logo.svg" },
-  { id:"chatgpt",   name:"ChatGPT",     img:"https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg" },
+/* ============ البيانات مع روابط بديلة للصور (fallback) ============ */
+/* كل عنصر عنده مصفوفة srcs: سيجرّب الأولى، وإن فشلت ينتقل للثانية... وهكذا */
+const ITEMS = [
+  {
+    id:"tiktok", name:"TikTok",
+    srcs:[
+      "https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg",
+      "https://upload.wikimedia.org/wikipedia/en/thumb/a/a9/TikTok_logo.svg/512px-TikTok_logo.svg.png"
+    ],
+    emoji:"🎵"
+  },
+  {
+    id:"snapchat", name:"سناب شات",
+    srcs:[
+      "https://upload.wikimedia.org/wikipedia/en/a/ad/Snapchat_logo.svg",
+      "https://upload.wikimedia.org/wikipedia/en/thumb/a/ad/Snapchat_logo.svg/512px-Snapchat_logo.svg.png"
+    ],
+    emoji:"⚡"
+  },
+  {
+    id:"instagram", name:"Instagram",
+    srcs:[
+      "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+    ],
+    emoji:"📸"
+  },
+  {
+    id:"twitterx", name:"Twitter (X)",
+    srcs:[
+      "https://upload.wikimedia.org/wikipedia/commons/9/95/Twitter_new_X_logo.png",
+      "https://upload.wikimedia.org/wikipedia/commons/5/53/X_logo_2023_original.svg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/X_logo_2023_original.svg/512px-X_logo_2023_original.svg.png"
+    ],
+    emoji:"🐦"
+  },
+  {
+    id:"ihsan", name:"إحسان",
+    srcs:[
+      "https://ehsan.sa/assets/images/logo.svg",
+      /* لو تعطل الموقع، استخدم بديل عام (قلب) كحل مؤقت: */
+      "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><rect width='100%' height='100%' fill='%230b1324'/><text x='50%' y='55%' font-size='110' text-anchor='middle'>%E2%9D%A4%EF%B8%8F</text></svg>"
+    ],
+    emoji:"💞"
+  },
+  {
+    id:"chatgpt", name:"ChatGPT",
+    srcs:[
+      "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/512px-ChatGPT_logo.svg.png"
+    ],
+    emoji:"🤖"
+  }
 ];
 
-const KEY = "GAMES_HUB_PICK"; // المفتاح في LocalStorage
-let selectedId = null;
+/* التسلسل المطلوب للجولات: أول اثنين يتواجهون، ثم الفائزة تواجه التالي... */
+const ORDER = ["tiktok","snapchat","instagram","twitterx","ihsan","chatgpt"];
+const KEY = "GAMES_HUB_PICK";
+
+let champion = null; // الفائزة الحالية
+let nextIndex = 0;   // مؤشر داخل ORDER
 
 function $(id){ return document.getElementById(id); }
+function getItemById(id){ return ITEMS.find(x=>x.id===id); }
 
-function renderChoices(){
-  const c = $("choices");
-  c.innerHTML = "";
-  OPTIONS.forEach(opt=>{
-    const div = document.createElement("div");
-    div.className = "choice" + (selectedId===opt.id ? " selected":"");
-    div.tabIndex = 0;
-    div.setAttribute("role", "button");
-    div.setAttribute("aria-label", "اختيار " + opt.name);
-    div.innerHTML = `
-      <img class="img" src="${opt.img}" alt="${opt.name}">
-      <div class="title">${opt.name}</div>
-    `;
-    div.addEventListener("click", ()=>select(opt.id));
-    div.addEventListener("keyup", (e)=>{ if(e.key==="Enter"||e.key===" "){ select(opt.id); }});
-    c.appendChild(div);
-  });
+function createImgWithFallback(sources, alt, placeholderEmoji){
+  const wrap = document.createElement("div");
+  let idx = 0;
+  const img = document.createElement("img");
+  img.className = "img";
+  img.alt = alt;
+
+  const fallback = document.createElement("div");
+  fallback.className = "fallback";
+  fallback.textContent = placeholderEmoji || "🖼️";
+  fallback.style.display = "none";
+
+  function tryNext(){
+    if (idx < sources.length){
+      img.src = sources[idx++];
+    } else {
+      // نفدت الروابط → أظهر بديل
+      img.style.display = "none";
+      fallback.style.display = "grid";
+    }
+  }
+  img.addEventListener("error", tryNext);
+  tryNext();
+
+  wrap.appendChild(img);
+  wrap.appendChild(fallback);
+  return wrap;
 }
 
-function select(id){
-  selectedId = id;
-  try { localStorage.setItem(KEY, id); } catch(e){}
-  renderChoices();
-  $("nextBtn").disabled = false;
+function renderPair(){
+  const pairEl = $("pair");
+  const bar = $("bar");
+  const roundLabel = $("roundLabel");
+
+  // البداية: خذ أول اثنين من ORDER
+  if (champion === null && nextIndex === 0){
+    champion = getItemById(ORDER[0]);
+    nextIndex = 1; // المنافس التالي هو ORDER[1]
+  }
+
+  // إنتهينا؟ (آخر واحد تمّت مواجهته)
+  if (nextIndex >= ORDER.length){
+    // حفظ النتيجة النهائية وتمكين التالي
+    try { localStorage.setItem(KEY, champion.id); } catch(e){}
+    pairEl.innerHTML = `<div class="muted">🎉 الفائزة النهائية: ${champion.name} — جاهزة للانتقال للعبة 2</div>`;
+    bar.style.width = "100%";
+    $("nextBtn").disabled = false;
+    roundLabel.textContent = "النهاية";
+    return;
+  }
+
+  const challenger = getItemById(ORDER[nextIndex]);
+
+  pairEl.innerHTML = "";
+
+  [champion, challenger].forEach((item, idx)=>{
+    const card = document.createElement("div");
+    card.className = "choice";
+    const imgWrap = createImgWithFallback(item.srcs, item.name, item.emoji);
+
+    const title = document.createElement("div");
+    title.className = "title";
+    title.textContent = item.name;
+
+    card.appendChild(imgWrap);
+    card.appendChild(title);
+
+    card.addEventListener("click", ()=>{
+      // اختيار الفائزة
+      champion = item;
+      nextIndex += 1;
+
+      // تقدّم الشريط
+      const totalDuels = ORDER.length - 1;        // عدد المواجهات
+      const done = Math.min(nextIndex, totalDuels);
+      bar.style.width = Math.floor(done/totalDuels*100) + "%";
+      $("roundLabel").textContent = (nextIndex>=ORDER.length) ? "النهاية" : ("الجولة " + (done+1));
+
+      renderPair();
+    });
+
+    pairEl.appendChild(card);
+  });
+
+  // حدّث شريط التقدم ووسم الجولة
+  const totalDuels = ORDER.length - 1;
+  const done = Math.min(nextIndex, totalDuels);
+  bar.style.width = Math.floor(done/totalDuels*100) + "%";
+  $("roundLabel").textContent = "الجولة " + (done+1);
 }
 
 $("nextBtn").addEventListener("click", ()=>{
-  // انتقل للخطوة 3
+  // إلى اللعبة الثانية
   window.location.href = "./step3-game.html";
 });
 
-// حمل اختيار سابق لو موجود
-try{
-  const prev = localStorage.getItem(KEY);
-  if (prev) { selectedId = prev; }
-}catch(e){}
-renderChoices();
-$("nextBtn").disabled = !selectedId;
+renderPair();
 </script>
 </body>
 </html>

@@ -47,8 +47,7 @@
   </div>
 
 <script>
-/* ============ مصادر صور موثوقة + بدائل ============ */
-/* نبدأ بـ Clearbit (logo.clearbit.com) ثم بدائل من ويكيميديا، ثم Emoji */
+/* ============ مصادر صور + بدائل ============ */
 const ITEMS = [
   { id:"tiktok",   name:"TikTok",
     srcs:[
@@ -59,5 +58,128 @@ const ITEMS = [
   },
   { id:"snapchat", name:"سناب شات",
     srcs:[
+      /* رابطك الموثق أولاً */
+      "https://geeknewscentral.com/wp-content/uploads/2020/11/Snapchat-logo-2020.png",
+      /* بدائل احتياطية */
       "https://logo.clearbit.com/snapchat.com",
-      "https://upload.wikimedia.
+      "https://upload.wikimedia.org/wikipedia/commons/c/c4/Snapchat_logo.svg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Snapchat_logo.svg/512px-Snapchat_logo.svg.png"
+    ], emoji:"⚡"
+  },
+  { id:"instagram", name:"Instagram",
+    srcs:[
+      "https://logo.clearbit.com/instagram.com",
+      "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+    ], emoji:"📸"
+  },
+  { id:"twitterx", name:"Twitter (X)",
+    srcs:[
+      "https://logo.clearbit.com/x.com",
+      "https://upload.wikimedia.org/wikipedia/commons/9/95/Twitter_new_X_logo.png",
+      "https://upload.wikimedia.org/wikipedia/commons/5/53/X_logo_2023_original.svg"
+    ], emoji:"🐦"
+  },
+  { id:"ihsan", name:"إحسان",
+    srcs:[
+      /* رابطك الموثق أولاً */
+      "https://www.okaz.com.sa/uploads/images/2022/08/26/2018065.jpg",
+      /* بدائل احتياطية */
+      "https://ehsan.sa/assets/images/logo.svg"
+    ], emoji:"💞"
+  },
+  { id:"chatgpt", name:"ChatGPT",
+    srcs:[
+      "https://logo.clearbit.com/openai.com",
+      "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg"
+    ], emoji:"🤖"
+  }
+];
+
+/* ترتيب المواجهات */
+const ORDER = ["tiktok","snapchat","instagram","twitterx","ihsan","chatgpt"];
+const KEY = "GAMES_HUB_PICK";
+
+let champion = null; // الفائزة الحالية
+let nextIndex = 0;   // يمر على ORDER
+function $(id){ return document.getElementById(id); }
+function getItem(id){ return ITEMS.find(x=>x.id===id); }
+
+function imgWithFallback(sources, alt, emoji){
+  const wrap = document.createElement("div");
+  let i = 0;
+  const img = document.createElement("img");
+  img.className = "img"; img.alt = alt;
+
+  const fb = document.createElement("div");
+  fb.className = "fallback"; fb.textContent = emoji || "🖼️"; fb.style.display = "none";
+
+  function tryNext(){
+    if (i < sources.length) { img.src = sources[i++]; }
+    else { img.style.display="none"; fb.style.display="grid"; }
+  }
+  img.addEventListener("error", tryNext);
+  tryNext();
+
+  wrap.appendChild(img); wrap.appendChild(fb);
+  return wrap;
+}
+
+function renderPair(){
+  const pair = $("pair");
+  const bar = $("bar");
+  const roundLabel = $("roundLabel");
+
+  // بدء المواجهات
+  if (champion === null && nextIndex === 0){
+    champion = getItem(ORDER[0]); // TikTok
+    nextIndex = 1;                // تواجه Snap
+  }
+
+  // نهاية المواجهات
+  if (nextIndex >= ORDER.length){
+    try { localStorage.setItem(KEY, champion.id); } catch(e){}
+    pair.innerHTML = `<div class="muted">🎉 الفائزة النهائية: ${champion.name}. يمكنك المتابعة للعبة 2.</div>`;
+    bar.style.width = "100%";
+    $("nextBtn").disabled = false;
+    roundLabel.textContent = "النهاية";
+    return;
+  }
+
+  const challenger = getItem(ORDER[nextIndex]);
+  pair.innerHTML = ""; // صور تَظهر اثنتين فقط
+
+  [champion, challenger].forEach((item)=>{
+    const card = document.createElement("div");
+    card.className = "choice";
+    card.appendChild(imgWithFallback(item.srcs, item.name, item.emoji));
+
+    const title = document.createElement("div");
+    title.className = "title";
+    title.textContent = item.name;
+    card.appendChild(title);
+
+    card.addEventListener("click", ()=>{
+      champion = item;                 // الفائزة تبقى
+      nextIndex += 1;                  // تواجه التالية
+      const total = ORDER.length - 1;  // عدد المواجهات
+      const done  = Math.min(nextIndex, total);
+      bar.style.width = Math.floor(done/total*100) + "%";
+      roundLabel.textContent = (nextIndex>=ORDER.length) ? "النهاية" : ("الجولة " + (done+1));
+      renderPair();
+    });
+
+    pair.appendChild(card);
+  });
+
+  // تحديث الجولة/التقدم
+  const total = ORDER.length - 1;
+  const done  = Math.min(nextIndex, total);
+  $("bar").style.width = Math.floor(done/total*100) + "%";
+  roundLabel.textContent = "الجولة " + (done+1);
+}
+
+$("nextBtn").addEventListener("click", ()=> window.location.href = "./step3-game.html?v=3");
+renderPair();
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>الخطوة 3 — لعبة 2 + صورتك المختارة</title>
+<style>
+  html,body{height:100%;margin:0;background:#0b1224;color:#e5e7eb;font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  .grid{display:grid;gap:16px}
+  @media(min-width:980px){ .grid{grid-template-columns:1.3fr .7fr} }
+  .card{background:#0e142a;border:1px solid #2b3453;border-radius:16px;padding:14px}
+  h1{font-size:20px;margin:0 0 10px}
+  .muted{color:#9aa4bf;font-size:14px;margin-bottom:8px}
+  iframe{width:100%;height:70vh;border:0;border-radius:12px;background:#000}
+  .side .img{width:160px;height:160px;object-fit:contain;display:block;margin:10px auto;border-radius:12px;background:#0b1324;border:1px solid #2b3453;padding:10px}
+  .title{text-align:center;font-weight:800}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .btn{border:1px solid #2b3453;background:#0f1b34;color:#e5e7eb;border-radius:12px;padding:10px 14px;cursor:pointer;text-decoration:none;display:inline-block}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="grid">
+      <div class="card">
+        <h1>🎮 الخطوة 3 — لعبة LearningApps (الثانية)</h1>
+        <div class="muted">اللعبة التالية ستُفتح هنا. الصورة المختارة تظهر في اللوحة اليمنى.</div>
+        <iframe
+          src="https://learningapps.org/watch?v=pew6v4kon25"
+          allowfullscreen
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+        <div class="row">
+          <a class="btn" href="./step2-pick.html">← رجوع لاختيار صورة</a>
+        </div>
+      </div>
+
+      <div class="card side">
+        <h2 class="title">📌 صورتك المختارة</h2>
+        <div id="box" class="muted">لا توجد صورة مختارة بعد. ارجعي إلى “اختاري صورة”.</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const KEY = "GAMES_HUB_PICK";
+const OPTIONS = {
+  "tiktok":    { name:"TikTok",      img:"https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg" },
+  "snapchat":  { name:"سناب شات",   img:"https://upload.wikimedia.org/wikipedia/en/a/ad/Snapchat_logo.svg" },
+  "instagram": { name:"Instagram",   img:"https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" },
+  "twitterx":  { name:"Twitter (X)", img:"https://upload.wikimedia.org/wikipedia/commons/9/95/Twitter_new_X_logo.png" },
+  "ihsan":     { name:"إحسان",       img:"https://ehsan.sa/assets/images/logo.svg" },
+  "chatgpt":   { name:"ChatGPT",     img:"https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg" },
+};
+
+function $(id){ return document.getElementById(id); }
+
+(function showPick(){
+  let id = null;
+  try { id = localStorage.getItem(KEY); } catch(e){}
+  const box = $("box");
+  if (!id || !OPTIONS[id]) {
+    box.innerHTML = 'لا توجد صورة مختارة بعد. <br>ارجعي إلى <a href="./step2-pick.html" class="btn">اختاري صورة</a>.';
+    return;
+  }
+  const data = OPTIONS[id];
+  box.innerHTML = `
+    <img class="img" src="${data.img}" alt="${data.name}">
+    <div class="title" style="margin-top:6px">${data.name}</div>
+    <div class="muted" style="text-align:center;margin-top:6px">✅ ستبقى هذه الصورة معك كنقطة تركيز</div>
+    <div style="text-align:center;margin-top:10px">
+      <button class="btn" onclick="clearPick()">مسح الاختيار</button>
+    </div>
+  `;
+})();
+
+function clearPick(){
+  try { localStorage.removeItem(KEY); } catch(e){}
+  location.reload();
+}
+</script>
+</body>
+</html>

@@ -26,6 +26,8 @@
   .btn:disabled{opacity:.6;cursor:not-allowed}
   .progress{height:10px;background:#1a2444;border-radius:999px;overflow:hidden;margin:10px 0 6px}
   .bar{height:100%;width:0;background:#22c55e}
+  .winnerBox{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+  .winnerImg{width:160px;height:160px;object-fit:contain;display:block;margin:6px auto;border-radius:12px;background:#0b1324;border:1px solid #2b3453;padding:10px}
 </style>
 </head>
 <body>
@@ -47,7 +49,7 @@
   </div>
 
 <script>
-/* ============ مصادر صور + بدائل ============ */
+/* ============ مصادر صور (أولوية لروابطك) + بدائل ============ */
 const ITEMS = [
   { id:"tiktok",   name:"TikTok",
     srcs:[
@@ -58,9 +60,7 @@ const ITEMS = [
   },
   { id:"snapchat", name:"سناب شات",
     srcs:[
-      /* رابطك الموثق أولاً */
-      "https://geeknewscentral.com/wp-content/uploads/2020/11/Snapchat-logo-2020.png",
-      /* بدائل احتياطية */
+      "https://geeknewscentral.com/wp-content/uploads/2020/11/Snapchat-logo-2020.png",  /* رابطك */
       "https://logo.clearbit.com/snapchat.com",
       "https://upload.wikimedia.org/wikipedia/commons/c/c4/Snapchat_logo.svg",
       "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Snapchat_logo.svg/512px-Snapchat_logo.svg.png"
@@ -81,9 +81,8 @@ const ITEMS = [
   },
   { id:"ihsan", name:"إحسان",
     srcs:[
-      /* رابطك الموثق أولاً */
-      "https://www.okaz.com.sa/uploads/images/2022/08/26/2018065.jpg",
-      /* بدائل احتياطية */
+      "https://www.okaz.com.sa/uploads/images/2022/08/26/2018065.jpg", /* رابطك */
+      "https://logo.clearbit.com/ehsan.sa",
       "https://ehsan.sa/assets/images/logo.svg"
     ], emoji:"💞"
   },
@@ -95,7 +94,6 @@ const ITEMS = [
   }
 ];
 
-/* ترتيب المواجهات */
 const ORDER = ["tiktok","snapchat","instagram","twitterx","ihsan","chatgpt"];
 const KEY = "GAMES_HUB_PICK";
 
@@ -104,11 +102,11 @@ let nextIndex = 0;   // يمر على ORDER
 function $(id){ return document.getElementById(id); }
 function getItem(id){ return ITEMS.find(x=>x.id===id); }
 
-function imgWithFallback(sources, alt, emoji){
+function imgWithFallback(sources, alt, emoji, cls="img"){
   const wrap = document.createElement("div");
   let i = 0;
   const img = document.createElement("img");
-  img.className = "img"; img.alt = alt;
+  img.className = cls; img.alt = alt;
 
   const fb = document.createElement("div");
   fb.className = "fallback"; fb.textContent = emoji || "🖼️"; fb.style.display = "none";
@@ -131,14 +129,23 @@ function renderPair(){
 
   // بدء المواجهات
   if (champion === null && nextIndex === 0){
-    champion = getItem(ORDER[0]); // TikTok
-    nextIndex = 1;                // تواجه Snap
+    champion = getItem(ORDER[0]); // أول واحدة (TikTok)
+    nextIndex = 1;                // ستواجه Snap
   }
 
-  // نهاية المواجهات
+  // نهاية كل المواجهات
   if (nextIndex >= ORDER.length){
     try { localStorage.setItem(KEY, champion.id); } catch(e){}
-    pair.innerHTML = `<div class="muted">🎉 الفائزة النهائية: ${champion.name}. يمكنك المتابعة للعبة 2.</div>`;
+    pair.innerHTML = "";  // اعرض صورة الفائزة بدل النص
+    const box = document.createElement("div");
+    box.className = "winnerBox";
+    box.innerHTML = `<div class="muted">🎉 الفائزة النهائية — جاهزة للانتقال للعبة 2</div>`;
+    box.appendChild(imgWithFallback(champion.srcs, champion.name, champion.emoji, "winnerImg"));
+    const t = document.createElement("div");
+    t.className = "title"; t.textContent = champion.name;
+    box.appendChild(t);
+    pair.appendChild(box);
+
     bar.style.width = "100%";
     $("nextBtn").disabled = false;
     roundLabel.textContent = "النهاية";
@@ -146,12 +153,12 @@ function renderPair(){
   }
 
   const challenger = getItem(ORDER[nextIndex]);
-  pair.innerHTML = ""; // صور تَظهر اثنتين فقط
+  pair.innerHTML = ""; // يضمن ظهور "صورتين فقط"
 
   [champion, challenger].forEach((item)=>{
     const card = document.createElement("div");
     card.className = "choice";
-    card.appendChild(imgWithFallback(item.srcs, item.name, item.emoji));
+    card.appendChild(imgWithFallback(item.srcs, item.name, item.emoji, "img"));
 
     const title = document.createElement("div");
     title.className = "title";

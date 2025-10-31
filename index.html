@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Games Hub + Image Choice</title>
+<style>
+  :root { --bg:#0f172a; --card:#111827; --muted:#94a3b8; --text:#e5e7eb; --accent:#22c55e; --ring:#334155; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+  .wrap { max-width:1200px; margin:0 auto; padding:24px; }
+  .header { display:flex; gap:16px; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .brand { font-size:20px; font-weight:700; letter-spacing:.3px; }
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; }
+  .tab-btn { border:1px solid var(--ring); background:transparent; color:var(--text); padding:10px 14px; border-radius:12px; cursor:pointer; }
+  .tab-btn.active { background:var(--accent); color:#052e16; border-color:transparent; }
+  .card { background:linear-gradient(180deg, #0b1222, #0a0f1c); border:1px solid var(--ring); border-radius:16px; padding:16px; }
+  .grid { display:grid; gap:16px; }
+  @media(min-width:900px){ .grid-2 { grid-template-columns: 1.2fr .8fr; } }
+  .section-title { font-weight:700; margin:6px 0 12px; font-size:18px; }
+  .muted { color:var(--muted); font-size:14px; }
+  .btn { display:inline-flex; align-items:center; gap:8px; border:1px solid var(--ring); padding:10px 14px; border-radius:12px; background:#0b1324; color:var(--text); cursor:pointer; }
+  .btn.primary { background:var(--accent); color:#052e16; border-color:transparent; }
+  .btn:disabled { opacity:.6; cursor:not-allowed; }
+  .img-select { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .img-choice { border:2px solid var(--ring); border-radius:14px; overflow:hidden; background:#0b1324; cursor:pointer; transition:transform .1s ease; }
+  .img-choice:hover { transform:translateY(-2px); }
+  .img-choice.selected { border-color:var(--accent); box-shadow:0 0 0 3px rgba(34,197,94,.25) inset; }
+  .img-choice img { width:100%; height:230px; object-fit:cover; display:block; }
+  .img-caption { padding:10px 12px; font-weight:600; }
+  .sticky-panel { position:sticky; top:12px; }
+  .thumb { width:100%; border-radius:12px; border:1px solid var(--ring); background:#0b1324; }
+  .steps { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 6px; }
+  .step { padding:6px 10px; border-radius:999px; background:#0b1324; border:1px solid var(--ring); font-size:13px; }
+  .step.active { background:var(--accent); color:#052e16; border-color:transparent; }
+  .flow { min-height:180px; border:1px dashed var(--ring); border-radius:14px; padding:14px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  select, input[type="text"] { width:100%; background:#0b1324; color:var(--text); border:1px solid var(--ring); border-radius:10px; padding:10px 12px; }
+  iframe { width:100%; height:540px; border:0; border-radius:14px; background:#000; }
+  .kbd { font:12px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace; background:#0b1324; border:1px solid var(--ring); padding:2px 6px; border-radius:6px; color:var(--muted); }
+  .hr { height:1px; background:var(--ring); margin:12px 0; border:0; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="brand">🎮 Games Hub — Image Choice ➜ Persistent</div>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="choice">Image Choice</button>
+        <button class="tab-btn" data-tab="hub">LearningApps Hub</button>
+      </div>
+    </div>
+
+    <!-- Tab: Image Choice -->
+    <div id="tab-choice" class="grid grid-2">
+      <div class="card">
+        <div class="section-title">1) Pick one image</div>
+        <div class="muted">Your selection will follow you until the end ✨</div>
+        <div id="imageSelection" class="img-select" aria-live="polite"></div>
+
+        <div class="hr"></div>
+        <div class="section-title">2) Flow Steps</div>
+        <div class="steps" id="stepsDots"></div>
+        <div id="flow" class="flow"></div>
+
+        <div class="row" style="margin-top:10px;">
+          <button id="prevBtn" class="btn" disabled>← Previous</button>
+          <button id="nextBtn" class="btn primary" disabled>Next →</button>
+          <span class="muted">Tip: press <span class="kbd">←</span>/<span class="kbd">→</span> to navigate</span>
+        </div>
+      </div>
+
+      <div class="card sticky-panel">
+        <div class="section-title">Selected Image</div>
+        <img id="selectedThumb" class="thumb" alt="Selected will appear here" />
+        <div id="selectedLabel" class="muted" style="margin-top:8px;">No selection yet.</div>
+      </div>
+    </div>
+
+    <!-- Tab: Hub -->
+    <div id="tab-hub" class="card" style="display:none;">
+      <div class="section-title">LearningApps — All in One Page</div>
+      <div class="muted" style="margin-bottom:10px;">Select a game from the list or paste a LearningApps URL/ID.</div>
+
+      <div class="grid" style="grid-template-columns: 1fr; gap:12px;">
+        <div class="row">
+          <select id="appsSelect" title="Pick a game"></select>
+          <input id="customUrl" type="text" placeholder="Paste LearningApps link or ID (e.g., p76goce7t25)" />
+          <button class="btn" id="loadCustom">Load</button>
+        </div>
+        <iframe id="appsFrame" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ========= CONFIG ========= */
+
+// 1) Two (or more) images to choose from:
+const IMAGE_CHOICES = [
+  {
+    label: "Option A — Desert Falcon",
+    src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600&auto=format&fit=crop"
+  },
+  {
+    label: "Option B — City Night",
+    src: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1600&auto=format&fit=crop"
+  }
+];
+
+// 2) Flow steps content (the picked image persists on the right panel)
+const FLOW_STEPS = [
+  { title: "Warm-up", html: "<p>Reflect: why did you pick this image? Write 2 reasons.</p>" },
+  { title: "Observation", html: "<p>List 3 features you notice that relate to today’s topic.</p>" },
+  { title: "Connection", html: "<p>Connect your image to a past lesson. Give 1 example.</p>" },
+  { title: "Application", html: "<p>Create a micro-task inspired by your chosen image.</p>" },
+  { title: "Finale", html: "<p>🎉 Well done! Your chosen image stayed with you to the end.</p>" }
+];
+
+// 3) LearningApps library (add as many as you like)
+const LEARNING_APPS = [
+  { title: "Matching — Example", id: "p76goce7t25" },
+  { title: "Order — Example", id: "pxxxxxxxxx01" },
+  { title: "Quiz — Example", id: "pxxxxxxxxx02" }
+];
+
+/* ========= STATE ========= */
+let selectedIndex = null;         // which image was chosen
+let currentStep = 0;              // index in FLOW_STEPS
+const LS_KEY = "gameshub_selected_index";
+
+/* ========= HELPERS ========= */
+function byId(id){ return document.getElementById(id); }
+
+function saveSelection(i){
+  selectedIndex = i;
+  try { localStorage.setItem(LS_KEY, String(i)); } catch(e){}
+  renderSelected();
+  updateNavButtons();
+}
+
+function loadSelection(){
+  try {
+    const v = localStorage.getItem(LS_KEY);
+    if (v !== null) selectedIndex = Number(v);
+  } catch(e){}
+}
+
+function renderSelected(){
+  const img = byId("selectedThumb");
+  const lab = byId("selectedLabel");
+  if (selectedIndex === null){
+    img.src = "";
+    img.alt = "No selection";
+    lab.textContent = "No selection yet.";
+    return;
+  }
+  const sel = IMAGE_CHOICES[selectedIndex];
+  img.src = sel.src;
+  img.alt = sel.label;
+  lab.textContent = sel.label + " — will persist to the end ✅";
+}
+
+function renderChoices(){
+  const container = byId("imageSelection");
+  container.innerHTML = "";
+  IMAGE_CHOICES.forEach((c, i) => {
+    const wrap = document.createElement("div");
+    wrap.className = "img-choice" + (selectedIndex===i ? " selected" : "");
+    wrap.tabIndex = 0;
+    wrap.setAttribute("role","button");
+    wrap.setAttribute("aria-label", "Choose " + c.label);
+
+    const img = document.createElement("img");
+    img.src = c.src;
+    img.alt = c.label;
+
+    const cap = document.createElement("div");
+    cap.className = "img-caption";
+    cap.textContent = c.label;
+
+    wrap.appendChild(img);
+    wrap.appendChild(cap);
+
+    wrap.addEventListener("click", () => {
+      saveSelection(i);
+      renderChoices(); // to toggle selected border
+    });
+    wrap.addEventListener("keyup", (ev)=>{
+      if (ev.key === "Enter" || ev.key === " ") { saveSelection(i); renderChoices(); }
+    });
+
+    container.appendChild(wrap);
+  });
+}
+
+function renderStepsDots(){
+  const d = byId("stepsDots");
+  d.innerHTML = "";
+  FLOW_STEPS.forEach((s, i)=>{
+    const el = document.createElement("div");
+    el.className = "step" + (i===currentStep ? " active":"");
+    el.textContent = (i+1) + ". " + s.title;
+    d.appendChild(el);
+  });
+}
+
+function renderFlow(){
+  const f = byId("flow");
+  const step = FLOW_STEPS[currentStep];
+  f.innerHTML = `<h3 style="margin:0 0 8px;">${step.title}</h3>${step.html}`;
+}
+
+function updateNavButtons(){
+  const prev = byId("prevBtn");
+  const next = byId("nextBtn");
+  prev.disabled = (currentStep===0);
+  // require selection before moving from step 0 (or at all)
+  const mustPick = (selectedIndex===null);
+  next.disabled = mustPick || (currentStep===FLOW_STEPS.length-1);
+}
+
+function goto(step){
+  currentStep = Math.max(0, Math.min(FLOW_STEPS.length-1, step));
+  renderStepsDots(); renderFlow(); updateNavButtons();
+}
+
+function onKeyNav(ev){
+  if (document.getElementById("tab-choice").style.display === "none") return;
+  if (ev.key === "ArrowRight") { if (!byId("nextBtn").disabled) goto(currentStep+1); }
+  if (ev.key === "ArrowLeft") { if (!byId("prevBtn").disabled) goto(currentStep-1); }
+}
+
+function appUrlFromIdOrLink(v){
+  // Accept full link or raw ID
+  if (!v) return null;
+  if (/learningapps\.org/.test(v)) {
+    // normalize to /watch?v=ID
+    const m = v.match(/[?&]v=([a-z0-9]+)/i);
+    if (m) return `https://learningapps.org/watch?v=${m[1]}`;
+    // try trailing path
+    const m2 = v.match(/learningapps\.org\/(?:watch|display)\?v=([a-z0-9]+)/i);
+    if (m2) return `https://learningapps.org/watch?v=${m2[1]}`;
+  }
+  // assume it's an ID
+  if (/^[a-z0-9]+$/i.test(v)) return `https://learningapps.org/watch?v=${v}`;
+  return null;
+}
+
+function initHub(){
+  const sel = byId("appsSelect");
+  sel.innerHTML = "";
+  LEARNING_APPS.forEach((a, i)=>{
+    const opt = document.createElement("option");
+    opt.value = a.id;
+    opt.textContent = `${i+1}. ${a.title}`;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener("change", ()=>{
+    const id = sel.value;
+    byId("appsFrame").src = appUrlFromIdOrLink(id);
+  });
+  // default first
+  if (LEARNING_APPS.length){
+    sel.value = LEARNING_APPS[0].id;
+    byId("appsFrame").src = appUrlFromIdOrLink(LEARNING_APPS[0].id);
+  }
+  byId("loadCustom").addEventListener("click", ()=>{
+    const v = byId("customUrl").value.trim();
+    const url = appUrlFromIdOrLink(v);
+    if (url) {
+      byId("appsFrame").src = url;
+    } else {
+      alert("Please paste a valid LearningApps link or ID.");
+    }
+  });
+}
+
+/* ========= TABS ========= */
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const t = btn.dataset.tab;
+    byId("tab-choice").style.display = (t==="choice"?"grid":"none");
+    byId("tab-hub").style.display = (t==="hub"?"block":"none");
+  });
+});
+
+/* ========= INIT ========= */
+(function(){
+  loadSelection();
+  renderChoices();
+  renderSelected();
+  renderStepsDots();
+  renderFlow();
+  updateNavButtons();
+  byId("prevBtn").addEventListener("click", ()=>goto(currentStep-1));
+  byId("nextBtn").addEventListener("click", ()=>goto(currentStep+1));
+  window.addEventListener("keydown", onKeyNav);
+  initHub();
+})();
+</script>
+</body>
+</html>

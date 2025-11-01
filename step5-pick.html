@@ -1,0 +1,131 @@
+<!doctype html><html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ورقة عمل 14: اختاري التطبيق</title>
+<style>
+html,body{margin:0;background:#0b1224;color:#e5e7eb;font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:#0e142a;border:1px solid #2b3453;border-radius:16px;padding:14px}
+h1{margin:0 0 12px} .muted{color:#9aa4bf;margin-bottom:10px}
+.pair{display:grid;gap:12px;margin-top:10px} @media(min-width:820px){.pair{grid-template-columns:1fr 1fr}}
+.choice{border:2px solid #2b3453;background:#101736;border-radius:14px;padding:14px;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .08s}
+.choice:hover{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18) inset;transform:translateY(-2px)}
+.img{width:140px;height:140px;object-fit:contain;display:block;margin:6px auto;border-radius:12px;background:#0b1324;border:1px solid #2b3453;padding:10px}
+.fallback{width:140px;height:140px;display:grid;place-items:center;margin:6px auto;border-radius:12px;background:#0b1324;border:1px solid #2b3453;padding:10px;font-size:46px}
+.title{text-align:center;font-weight:800;margin-top:6px}
+.progress{height:10px;background:#1a2444;border-radius:999px;overflow:hidden;margin:10px 0 6px}.bar{height:100%;width:0;background:#22c55e}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.btn{border:1px solid #2b3453;background:#0f1b34;color:#e5e7eb;padding:10px 14px;border-radius:12px;text-decoration:none}
+.primary{background:#22c55e;color:#052e16;border-color:transparent}
+.winnerBox{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.winnerImg{width:160px;height:160px;object-fit:contain;display:block;margin:6px auto;border-radius:12px;background:#0b1324;border:1px solid #2b3453;padding:10px}
+</style></head><body>
+<div class="wrap"><div class="card">
+<h1>📸 ورقة عمل 14: اختاري التطبيق</h1>
+<div class="muted">اختاري واحدة في كل جولة: TikTok vs سناب → الفائزة vs Instagram → vs X → vs إحسان → vs ChatGPT.</div>
+
+<div class="progress"><div id="bar" class="bar"></div></div>
+<div id="roundLabel" class="muted">الجولة 1</div>
+
+<div id="pair" class="pair" aria-live="polite"></div>
+
+<div class="row">
+  <a class="btn" href="./step4.html">← السابق</a>
+  <a id="nextBtn" class="btn primary" href="./step6.html" style="pointer-events:none;opacity:.6">التالي → ورقة عمل 15</a>
+</div>
+</div></div>
+
+<script>
+/* صور محدّثة: TikTok أولاً برابطك، سناب/إحسان بروابطك أيضاً */
+const ITEMS = [
+  { id:"tiktok",   name:"TikTok", srcs:[
+      "https://m.media-amazon.com/images/I/41b3zsiq4pL.png", /* ← رابطك الجديد */
+      "https://logo.clearbit.com/tiktok.com",
+      "https://upload.wikimedia.org/wikipedia/commons/3/3a/TikTok_Icon_Black.svg"
+    ], emoji:"🎵"
+  },
+  { id:"snapchat", name:"سناب شات", srcs:[
+      "https://geeknewscentral.com/wp-content/uploads/2020/11/Snapchat-logo-2020.png", /* ← رابطك */
+      "https://logo.clearbit.com/snapchat.com",
+      "https://upload.wikimedia.org/wikipedia/commons/c/c4/Snapchat_logo.svg"
+    ], emoji:"⚡"
+  },
+  { id:"instagram", name:"Instagram", srcs:[
+      "https://logo.clearbit.com/instagram.com",
+      "https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png"
+    ], emoji:"📸"
+  },
+  { id:"twitterx", name:"Twitter (X)", srcs:[
+      "https://logo.clearbit.com/x.com",
+      "https://upload.wikimedia.org/wikipedia/commons/9/95/Twitter_new_X_logo.png"
+    ], emoji:"🐦"
+  },
+  { id:"ihsan",    name:"إحسان", srcs:[
+      "https://www.okaz.com.sa/uploads/images/2022/08/26/2018065.jpg", /* ← رابطك */
+      "https://logo.clearbit.com/ehsan.sa",
+      "https://ehsan.sa/assets/images/logo.svg"
+    ], emoji:"💞"
+  },
+  { id:"chatgpt",  name:"ChatGPT", srcs:[
+      "https://logo.clearbit.com/openai.com",
+      "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg"
+    ], emoji:"🤖"
+  }
+];
+
+const ORDER = ["tiktok","snapchat","instagram","twitterx","ihsan","chatgpt"];
+const KEY = "GAMES_HUB_PICK";
+let champion = null, nextIndex = 0;
+
+function $(id){return document.getElementById(id);}
+function getItem(id){return ITEMS.find(x=>x.id===id);}
+
+function imgWithFallback(sources, alt, emoji, cls="img"){
+  const wrap=document.createElement("div"); let i=0;
+  const img=document.createElement("img"); img.className=cls; img.alt=alt;
+  const fb=document.createElement("div"); fb.className="fallback"; fb.textContent=emoji||"🖼️"; fb.style.display="none";
+  function tryNext(){ if(i<sources.length){ img.src=sources[i++]; } else { img.style.display="none"; fb.style.display="grid"; } }
+  img.addEventListener("error", tryNext); tryNext();
+  wrap.appendChild(img); wrap.appendChild(fb); return wrap;
+}
+
+function renderPair(){
+  const pair=$("pair"), bar=$("bar"), roundLabel=$("roundLabel");
+
+  if(champion===null && nextIndex===0){ champion=getItem(ORDER[0]); nextIndex=1; }
+
+  if(nextIndex>=ORDER.length){
+    try{ localStorage.setItem(KEY, champion.id); }catch(e){}
+    pair.innerHTML="";
+    const box=document.createElement("div"); box.className="winnerBox";
+    box.innerHTML=`<div class="muted">🎉 الفائزة النهائية — جاهزة للانتقال</div>`;
+    box.appendChild(imgWithFallback(champion.srcs, champion.name, champion.emoji, "winnerImg"));
+    const t=document.createElement("div"); t.className="title"; t.textContent=champion.name; box.appendChild(t);
+    pair.appendChild(box);
+    bar.style.width="100%"; roundLabel.textContent="النهاية";
+    const next=$("nextBtn"); next.style.pointerEvents="auto"; next.style.opacity="1";
+    return;
+  }
+
+  const challenger=getItem(ORDER[nextIndex]); pair.innerHTML="";
+
+  [champion, challenger].forEach((item)=>{
+    const card=document.createElement("div"); card.className="choice";
+    card.appendChild(imgWithFallback(item.srcs, item.name, item.emoji, "img"));
+    const title=document.createElement("div"); title.className="title"; title.textContent=item.name; card.appendChild(title);
+    card.addEventListener("click", ()=>{
+      champion=item; nextIndex+=1;
+      const total=ORDER.length-1, done=Math.min(nextIndex,total);
+      bar.style.width=Math.floor(done/total*100)+"%";
+      roundLabel.textContent=(nextIndex>=ORDER.length)?"النهاية":("الجولة "+(done+1));
+      renderPair();
+    });
+    pair.appendChild(card);
+  });
+
+  const total=ORDER.length-1, done=Math.min(nextIndex,total);
+  bar.style.width=Math.floor(done/total*100)+"%";
+  roundLabel.textContent="الجولة "+(done+1);
+}
+renderPair();
+</script>
+</body></html>
